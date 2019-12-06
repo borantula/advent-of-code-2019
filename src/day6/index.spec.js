@@ -5,6 +5,7 @@ import {
   countOrbitOfPlanetBody,
   calculateTotalOrbits
 } from "./q1";
+import { getOrbitalTree, findFirstCommonAncestor } from "./q2";
 
 const data = `
 COM)B
@@ -66,4 +67,11 @@ test("calculateTotalOrbits", () => {
   const orbitMaps = createOrbitMaps(parsed);
 
   expect(calculateTotalOrbits(orbitMaps)).toBe(42);
+});
+
+test("getOrbitalTree", () => {
+  const parsedTransfer = parseOrbitPairs(parseLinesToArray(transferData));
+  const orbitMaps = createOrbitMaps(parsedTransfer);
+
+  expect(findFirstCommonAncestor(orbitMaps, "YOU", "SAN")).toBe(4);
 });

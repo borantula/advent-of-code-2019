@@ -28,5 +28,5 @@ export function calculateTotalOrbits(spaceThings) {
 }
 
 const parsed = parseOrbitPairs(parseLinesToArray(data));
-const spaceThings = createOrbitMaps(parsed);
-console.log(calculateTotalOrbits(spaceThings));
+export const spaceThings = createOrbitMaps(parsed);
+// console.log(calculateTotalOrbits(spaceThings));
