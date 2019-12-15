@@ -1,4 +1,4 @@
-import { runOpcode } from "../day7/q2";
+import { runOpcode } from "../day5";
 import { data } from "./data";
 
 export function runSequence(data, sequence, initialInput = 0) {
@@ -32,4 +32,4 @@ export function findMostEfficientConfig(data, numbers) {
   return results[0];
 }
 
-console.log(findMostEfficientConfig(data, [0, 1, 2, 3, 4]));
+// console.log(findMostEfficientConfig(data, [0, 1, 2, 3, 4]));
