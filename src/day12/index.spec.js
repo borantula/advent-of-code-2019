@@ -38,7 +38,7 @@ const parser = str =>
     };
   });
 
-const data1 = parser(data);
+const data1 = parser(d);
 
 test("data1", () => {
   let data = [...data1];
