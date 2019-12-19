@@ -1,4 +1,5 @@
-import { currentOpcode, data } from "./data";
+// import { data } from "./data";
+import { data as day5data } from "../day5/data";
 
 export class IntcodeComputer {
   constructor(opcode, input = 0) {
@@ -17,8 +18,9 @@ export class IntcodeComputer {
       5: this.jumpForInequality,
       6: this.jumpForEquality,
       7: this.lessThan,
-      8: this.equalsTo
+      8: this.equalsTo,
       // 9: this.setRelativeBase
+      99: this.halt
     };
   }
 
@@ -29,6 +31,7 @@ export class IntcodeComputer {
       this.setInputs();
       this.setParameters();
 
+      // console.log("a:", this.i, this.mode);
       const fn = this.modeFunctions[this.mode];
       if (!fn) {
         throw new Error(
@@ -40,8 +43,8 @@ export class IntcodeComputer {
 
       fn.apply(this);
 
-      if (count === 100) {
-        break;
+      if (count === 500) {
+        // break;
       }
       count++;
 
@@ -49,7 +52,11 @@ export class IntcodeComputer {
         break;
       }
     }
-    return;
+
+    if (this.mode === 99) {
+      return true;
+    }
+    return false;
   }
 
   getOutput() {
@@ -93,19 +100,15 @@ export class IntcodeComputer {
         return opcode[currentInput];
       case 1:
         return currentInput;
-      case 2:
-        return opcode[relativeBase + currentInput];
+      // case 2:
+      //   return opcode[relativeBase + currentInput];
       default:
         return opcode[currentInput];
     }
   }
 
   updateOpcode(index, value) {
-    const valueMode = value % 100;
-    if (valueMode <= 8 && valueMode >= 1) {
-      let valueArr = [...String(value)].reverse();
-      valueArr.map((i)=>)
-    }
+    // const valueMode = value % 100;
 
     this.opcode[index] = value;
     return this;
@@ -121,6 +124,7 @@ export class IntcodeComputer {
       this.i + 4
     );
   }
+
   multiply() {
     this.updateOpcode(this.input3, this.param1 * this.param2).setIndex(
       this.i + 4
@@ -131,6 +135,7 @@ export class IntcodeComputer {
   }
   outputMode() {
     this.output = this.param1;
+    this.setIndex(this.i + 2);
   }
   jumpForInequality() {
     const newIndex = this.param1 !== 0 ? this.param2 : this.i + 3;
@@ -138,6 +143,7 @@ export class IntcodeComputer {
   }
   jumpForEquality() {
     const newIndex = this.param1 === 0 ? this.param2 : this.i + 3;
+    console.log("ni", newIndex);
     this.setIndex(newIndex);
   }
   lessThan() {
@@ -152,131 +158,98 @@ export class IntcodeComputer {
     this.relativeBase += this.param1;
     this.setIndex(this.relativeBase);
   }
-}
-
-export function runOpcode(code, i = 0, relativeBase = 0) {
-  let opcode = [...code].map(e => Number(e));
-  let output = 0;
-
-  const mode = opcode[i] % 100;
-
-  const args = [...String(opcode[i])].reverse();
-  const a1 = Number(args[2]) || 0;
-  const a2 = Number(args[3]) || 0;
-  const a3 = args[5] || 0;
-
-  const input1 = opcode[i + 1];
-  const input2 = opcode[i + 2];
-  const input3 = opcode[i + 3];
-
-  const paramFactory = (p, currentInput) => {
-    switch (p) {
-      case 0:
-        return opcode[input1];
-      case 1:
-        return input1;
-      case 2:
-        return opcode[relativeBase + input1];
-      default:
-        return opcode[input1];
-    }
-  };
-
-  const t1 = paramFactory(a1, input1);
-  const t2 = paramFactory(a2, input2);
-  const t3 = paramFactory(a3, input3);
-
-  switch (mode) {
-    case 1: {
-      opcode[input3] = t1 + t2;
-      return runOpcode(opcode, i + 4, relativeBase);
-    }
-    case 2: {
-      opcode[input3] = t1 * t2;
-      return runOpcode(opcode, i + 4, relativeBase);
-    }
-    // Opcode 3 takes a single integer as input and saves it to the position given by its only parameter.
-    // For example, the instruction 3,50 would take an input value and store it at address 50.
-    case 3: {
-      opcode[input3] = 1;
-      return runOpcode(opcode, i + 2, relativeBase);
-    }
-    // Opcode 4 outputs the value of its only parameter.
-    // For example, the instruction 4,50 would output the value at address 50.
-    case 4: {
-      output = opcode[input1];
-      console.log(`OUTPUTTING: ${opcode[input1]}`);
-      return opcode[input1];
-    }
-    case 5: {
-      return runOpcode(opcode, t1 !== 0 ? t2 : i + 3, relativeBase);
-    }
-    case 6: {
-      return runOpcode(opcode, t1 === 0 ? t2 : i + 3, relativeBase);
-    }
-    case 7: {
-      opcode[input3] = t1 < t2 ? 1 : 0;
-      return runOpcode(opcode, i + 4, relativeBase);
-    }
-    case 8: {
-      opcode[input3] = t1 === t2 ? 1 : 0;
-      return runOpcode(opcode, i + 4, relativeBase);
-    }
-    case 9: {
-      return runOpcode(opcode, i, relativeBase + input1);
-    }
-    case 99:
-      console.log(`Program halted on:${i}`);
-      return opcode;
-    default:
-      throw new Error(
-        `Wrong Opcode ${mode} at index: ${i} and value of ${opcode[i]}`
-      );
+  halt() {
+    return this.getOutput();
   }
 }
+/*
+const computer8 = new IntcodeComputer([3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8], 8);
+computer8.run();
 
-export function runModifiedOpcode(opcode, i1, i2) {
-  let newOpcode = [...opcode];
-  newOpcode[1] = i1;
-  newOpcode[2] = i2;
-  return runOpcode(newOpcode);
-}
+const computer7 = new IntcodeComputer([3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8], 7);
+computer7.run();
 
-// const program = "1,9,10,3,2,3,11,0,99,30,40,50".split(",").map(e => Number(e));
-// console.log(runOpcode([1101, 100, -1, 4, 0]));
-// try {
-//   console.log(runOpcode(data));
-// } catch (err) {
-//   console.log(err);
-// }
+const d1 = [3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9];
+const d2 = [3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9];
+const c1 = new IntcodeComputer(d1, 0);
+c1.run();
 
-// const noInputSelfCopy = [
-//   109,
-//   1,
-//   204,
-//   -1,
-//   1001,
-//   100,
-//   1,
-//   100,
-//   1008,
-//   100,
-//   16,
-//   101,
-//   1006,
-//   101,
-//   0,
-//   99
-// ];
-// const programWithParam = [1002, 4, 3, 4, 33];
-// const digit16Output = [1102, 34915192, 34915192, 7, 4, 7, 99, 0];
-// const middleOutput = [104, 1125899906842624, 99];
-// const t = new Array(3000).fill(0);
-// let bigArray = [109, 19, 204, -34, ...t];
-// bigArray[1985] = 123;
+const c2 = new IntcodeComputer(d1, 2);
+c2.run();
 
-// const comp1 = new IntcodeComputer(noInputSelfCopy);
-// comp1.run();
+const c3 = new IntcodeComputer(d2, 0);
+c3.run();
 
-// console.log(comp1.getOpcode());
-// console.log(comp1.getOutput());
+const c4 = new IntcodeComputer(d2, 13);
+c4.run();
+
+const d3 = [
+  3,
+  21,
+  1008,
+  21,
+  8,
+  20,
+  1005,
+  20,
+  22,
+  107,
+  8,
+  21,
+  20,
+  1006,
+  20,
+  31,
+  1106,
+  0,
+  36,
+  98,
+  0,
+  0,
+  1002,
+  21,
+  125,
+  20,
+  4,
+  20,
+  1105,
+  1,
+  46,
+  104,
+  999,
+  1105,
+  1,
+  46,
+  1101,
+  1000,
+  1,
+  20,
+  4,
+  20,
+  1105,
+  1,
+  46,
+  98,
+  99
+];
+
+const c5 = new IntcodeComputer(d3, 6);
+c5.run();
+const c6 = new IntcodeComputer(d3, 8);
+c6.run();
+const c7 = new IntcodeComputer(d3, 81);
+c7.run();
+
+console.log("IF 8", computer8.getOutput(), computer8.getOutput() === 1);
+console.log("IF 7", computer7.getOutput(), computer7.getOutput() === 0);
+console.log("C1 - 0", c1.getOutput(), c1.getOutput() === 0);
+console.log("C1 - !0", c2.getOutput(), c2.getOutput() === 1);
+console.log("C3 - 0", c3.getOutput(), c3.getOutput() === 0);
+console.log("C4 - !0", c4.getOutput(), c4.getOutput() === 1);
+console.log("C5 - 999 for < 8", c5.getOutput(), c5.getOutput() === 999);
+console.log("C6 - 1000 for > 8", c6.getOutput(), c6.getOutput() === 1000);
+console.log("C6 - 1000 for > 8", c7.getOutput(), c7.getOutput() === 1001);
+*/
+// const q1 = new IntcodeComputer(day5data, 5);
+// q1.run();
+// console.log(q1.getOutput());
