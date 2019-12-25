@@ -23,12 +23,16 @@ export class IntcodeComputer {
       9: this.setRelativeBase,
       99: this.halt
     };
+    this.count = 0;
   }
 
   run() {
-    let count = 0;
+    this.paused = false;
     while (true) {
-      count++;
+      if (this.paused) {
+        return false;
+      }
+      this.count++;
 
       this.setMode();
 
@@ -47,7 +51,7 @@ export class IntcodeComputer {
 
       fn.apply(this);
     }
-    console.log("DONE IN:", count);
+    console.log("DONE IN:", this.count);
 
     if (this.mode === 99) {
       return true;
@@ -55,8 +59,24 @@ export class IntcodeComputer {
     return false;
   }
 
+  pause() {
+    this.paused = true;
+  }
+
+  setInput(value) {
+    this.input = value;
+  }
+
   getOutput() {
     return this.output;
+  }
+
+  setOutput(code) {
+    this.output = code;
+    this.result.push(code);
+
+    // added for Q11
+    this.pause();
   }
 
   getOpcode() {
@@ -164,8 +184,8 @@ export class IntcodeComputer {
   outputMode() {
     const { a1 } = this.getParameters();
     const param1 = this.paramFactory(a1, this.input1);
-    this.output = param1;
-    this.result.push(param1);
+
+    this.setOutput(param1);
     this.setIndex(this.i + 2);
   }
   jumpForInequality() {
